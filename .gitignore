@@ -1,0 +1,19 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+out/
+tmp/
+
+*.iml
+.idea
+.DS_Store
+
+# Test binary, build with `go test -c`
+*.test
+
+config.yml
+/vendor/

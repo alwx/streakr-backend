@@ -1,0 +1,20 @@
+db:
+  host: localhost
+  port: 5433
+  user: streakr
+  password: streakr-password
+  name: streakr-db
+  migrations: file://migrations
+
+redis:
+  address: localhost:6378
+  password:
+  db: 0
+
+http:
+  port: 3000
+
+web:
+  auth:
+    minutes_timeout: 1440
+    hours_max_refresh: 168

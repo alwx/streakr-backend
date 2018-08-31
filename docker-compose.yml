@@ -1,0 +1,17 @@
+version: '3.3'
+
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    ports:
+     - "5433:5432"
+    environment:
+      POSTGRES_DB: streakr-db
+      POSTGRES_USER: streakr
+      POSTGRES_PASSWORD: streakr-password
+
+  redis:
+    image: redis:alpine
+    ports:
+     - "6378:6379"
