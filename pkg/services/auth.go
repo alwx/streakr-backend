@@ -11,14 +11,10 @@ import (
 )
 
 func GetAuthMiddleware(db *sql.DB, redis *redis.Client) (*jwt.GinJWTMiddleware, error) {
-	companyName, err := redis.Get("config.company_name").Result()
-	if err != nil {
-		companyName = ""
-	}
 
 	middleware := &jwt.GinJWTMiddleware{
-		Realm:         companyName,
-		Key:           []byte(companyName), //TODO(alwx): should be fixed
+		Realm:         "Streakr",
+		Key:           []byte("Streakr"),
 		Timeout:       time.Minute * time.Duration(viper.GetInt("web.auth.minutes_timeout")),
 		MaxRefresh:    time.Hour * time.Duration(viper.GetInt("web.auth.hours_max_refresh")),
 		TokenLookup:   "header:Authorization",
