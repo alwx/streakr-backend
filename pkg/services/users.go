@@ -2,8 +2,9 @@ package services
 
 import (
 	"database/sql"
-	"github.com/google/uuid"
 	"streakr-backend/pkg/utils"
+
+	"github.com/google/uuid"
 )
 
 type NewUser struct {
@@ -27,6 +28,13 @@ type User struct {
 	Token          string `json:"user_token,omitempty"`
 	DisplayName    string `json:"display_name,omitempty"`
 	UserPersonId   int    `json:"user_person_id,omitempty"`
+
+	Campaigns []CampaignInfo `json:"campaigns,omitempty"`
+}
+
+type CampaignInfo struct {
+	Name   string `json:"name"`
+	Streak int    `json:"streak"`
 }
 
 type RegistrationData struct {
@@ -85,6 +93,27 @@ func (userLookup *UserLookup) GetByEmail(db *sql.DB) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
+
+	rows, err := db.Query(
+		"SELECT cu.campaignId, cu.streak_length FROM users as u JOIN campaign_user as cu ON cu.userId = u.id WHERE email = $1",
+		userLookup.Email,
+	)
+
+	if err != nil {
+		return User{}, err
+	}
+
+	var campaigns []CampaignInfo
+	defer rows.Close()
+	for rows.Next() {
+		var info CampaignInfo
+		err = rows.Scan(&info.Name, &info.Streak)
+		if err == nil {
+			campaigns = append(campaigns, info)
+		}
+	}
+
+	user.Campaigns = campaigns
 
 	return user, nil
 }
