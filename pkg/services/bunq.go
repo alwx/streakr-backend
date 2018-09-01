@@ -168,7 +168,7 @@ func BunqSetNotificationFilters(user User, bunqUser string) (string, error) {
 	endpoint := fmt.Sprintf("/v1/user-person/%d", user.UserPersonId)
 	url := viper.GetString("bunq.api") + endpoint
 
-	json := "{\"notification_filters\": [{\"notification_delivery_method\": \"URL\", \"notification_target\": \"https://streakr.alwx.me/push\", \"category\": \"MUTATION\"}]}"
+	json := "{\"notification_filters\": [{\"notification_delivery_method\": \"URL\", \"notification_target\": \"https://streakr.alwx.me/users/push\", \"category\": \"MUTATION\"}]}"
 
 	headers := utils.GetBasicHeaders(user.Token)
 	signedSignature, err := utils.GetSignature("PUT " + endpoint, headers, json, user.PrivateKey)
