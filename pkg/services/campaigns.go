@@ -92,7 +92,7 @@ func AddOrUpdateUserToCampaign(db *sql.DB, campaignId string, userId string) (in
 
 	if err == sql.ErrNoRows {
 		//mapping is not created, so we should insert new value
-		err = db.QueryRow("INSERT INTO campaign_user(campaignId, userId, streak_length) VALUES ($1, $2, $3) RETURNING streak_length", campaignId, userId, 0).Scan(&streakLength)
+		err = db.QueryRow("INSERT INTO campaign_user(campaignId, userId, streak_length) VALUES ($1, $2, $3) RETURNING streak_length", campaignId, userId, 1).Scan(&streakLength)
 		if err != nil {
 			return streakLength, err
 		}
