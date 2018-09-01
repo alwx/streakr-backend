@@ -7,6 +7,8 @@ import (
 	"streakr-backend/pkg/utils"
 	"errors"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 )
 
 func UserRouter(data Data) {
@@ -185,5 +187,11 @@ func UserRouter(data Data) {
 				c.JSON(http.StatusOK, gin.H{"result": res})
 			})
 		}
+
+		users.POST("push", func(c *gin.Context) {
+			x, _ := ioutil.ReadAll(c.Request.Body)
+			fmt.Printf("%s", string(x))
+			c.JSON(http.StatusOK, gin.H{"result": "kek"})
+		})
 	}
 }
