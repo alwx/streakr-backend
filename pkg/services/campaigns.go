@@ -12,6 +12,7 @@ type NewCampaign struct {
 	BadgeImageUrl string `json:"badge_image_url"`
 	MinPrice      int    `json:"min_price"`
 	Streak        int    `json:"streak"`
+	Transaction   string `json:"transaction"`
 }
 
 type Campaign struct {
@@ -21,6 +22,7 @@ type Campaign struct {
 	BadgeImageUrl string `json:"badge_image_url,omitempty"`
 	MinPrice      int    `json:"min_price,omitempty"`
 	Streak        int    `json:"streak,omitempty"`
+	Transaction   string `json:"transaction,omitempty"`
 }
 
 type NewCampaignData struct {
@@ -31,13 +33,14 @@ func (campaign *NewCampaign) Insert(db *sql.DB) (string, error) {
 	var lastInsertId string
 
 	var err = db.QueryRow(
-		"INSERT INTO campaigns(id, name, description, badge_image_url, min_price, streak) VALUES($1, $2, $3, $4, $5, $6) RETURNING id;",
+		"INSERT INTO campaigns(id, name, description, badge_image_url, min_price, streak, transaction) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id;",
 		uuid.New().String(),
 		campaign.Name,
 		campaign.Description,
 		campaign.BadgeImageUrl,
 		campaign.MinPrice,
 		campaign.Streak,
+		campaign.Transaction,
 	).Scan(&lastInsertId)
 
 	if err != nil {
@@ -65,14 +68,14 @@ func GetCampaignById(db *sql.DB, campaignUuid string) (Campaign, error) {
 func GetCampaigns(db *sql.DB) ([]Campaign, error) {
 	var campaigns []Campaign
 
-	rows, err := db.Query("SELECT id, name, description, badge_image_url, min_price, streak FROM campaigns")
+	rows, err := db.Query("SELECT id, name, description, badge_image_url, min_price, streak, transaction FROM campaigns")
 	if err != nil {
 		return []Campaign{}, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var campaign Campaign
-		err = rows.Scan(&campaign.Id, &campaign.Name, &campaign.Description, &campaign.BadgeImageUrl, &campaign.MinPrice, &campaign.Streak)
+		err = rows.Scan(&campaign.Id, &campaign.Name, &campaign.Description, &campaign.BadgeImageUrl, &campaign.MinPrice, &campaign.Streak, &campaign.Transaction)
 		if err == nil {
 			campaigns = append(campaigns, campaign)
 		}
