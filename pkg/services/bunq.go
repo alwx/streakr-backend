@@ -1,17 +1,18 @@
 package services
 
 import (
-	"github.com/spf13/viper"
 	"bytes"
-	"net/http"
-	"io/ioutil"
-	"streakr-backend/pkg/utils"
-	"github.com/tidwall/gjson"
+	"database/sql"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"streakr-backend/pkg/utils"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"database/sql"
-	"strings"
+	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
 )
 
 func execute(req *http.Request) (*http.Response, error) {
@@ -130,9 +131,9 @@ func BunqSessionServer(user *NewUser) (SessionServer, error) {
 
 	return SessionServer{
 		UserPersonId: userPerson.Get("id").Int(),
-		PublicId: userPerson.Get("public_uuid").String(),
-		DisplayName: userPerson.Get("display_name").String(),
-		Token: gjson.Get(string(body), "Response.1.Token.token").String(),
+		PublicId:     userPerson.Get("public_uuid").String(),
+		DisplayName:  userPerson.Get("display_name").String(),
+		Token:        gjson.Get(string(body), "Response.1.Token.token").String(),
 	}, nil
 }
 
@@ -143,7 +144,7 @@ func BunqGetUser(user User) (User, string, error) {
 	json := ""
 
 	headers := utils.GetBasicHeaders(user.Token)
-	signedSignature, err := utils.GetSignature("GET " + endpoint, headers, json, user.PrivateKey)
+	signedSignature, err := utils.GetSignature("GET "+endpoint, headers, json, user.PrivateKey)
 	if err != nil {
 		return user, "", err
 	}
@@ -176,7 +177,7 @@ func BunqSetNotificationFilters(user User) (string, error) {
 	json := "{\"notification_filters\": [{\"notification_delivery_method\": \"URL\", \"notification_target\": \"https://streakr.alwx.me/users/push\", \"category\": \"MUTATION\"}]}"
 
 	headers := utils.GetBasicHeaders(user.Token)
-	signedSignature, err := utils.GetSignature("PUT " + endpoint, headers, json, user.PrivateKey)
+	signedSignature, err := utils.GetSignature("PUT "+endpoint, headers, json, user.PrivateKey)
 	if err != nil {
 		return "", err
 	}
@@ -219,7 +220,7 @@ func BunqProcessNotification(pushInfo string, db *sql.DB) (string, error) {
 		return "", err
 	}
 	for _, campaign := range campaigns {
-		if strings.Contains(counterparty, campaign.Name) {
+		if strings.Contains(counterparty, campaign.Transaction) {
 			AddOrUpdateUserToCampaign(db, campaign.Id, user.Id)
 		}
 	}
