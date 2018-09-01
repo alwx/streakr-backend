@@ -33,8 +33,9 @@ type User struct {
 }
 
 type CampaignInfo struct {
-	Name   string `json:"name"`
-	Streak int    `json:"streak"`
+	Name     string `json:"name"`
+	ImageUrl string `json:"image_url"`
+	Streak   int    `json:"streak"`
 }
 
 type RegistrationData struct {
@@ -95,8 +96,8 @@ func (userLookup *UserLookup) GetByEmail(db *sql.DB) (User, error) {
 	}
 
 	rows, err := db.Query(
-		"SELECT cu.campaignId, cu.streak_length FROM users as u JOIN campaign_user as cu ON cu.userId = u.id WHERE email = $1",
-		userLookup.Email,
+		"SELECT c.name, c.badge_image_url, cu.streak_length FROM users as u LEFT JOIN campaign_user as cu ON cu.userId = u.id LEFT JOIN campaigns as c ON cu.campaignId = c.id  WHERE u.id = $1",
+		user.Id,
 	)
 
 	if err != nil {
@@ -107,7 +108,7 @@ func (userLookup *UserLookup) GetByEmail(db *sql.DB) (User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var info CampaignInfo
-		err = rows.Scan(&info.Name, &info.Streak)
+		err = rows.Scan(&info.Name, &info.ImageUrl, &info.Streak)
 		if err == nil {
 			campaigns = append(campaigns, info)
 		}
