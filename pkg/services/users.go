@@ -100,8 +100,8 @@ func (userLookup *UserLookup) GetByEmail(db *sql.DB) (User, error) {
 	}
 
 	rows, err := db.Query(
-		"SELECT c.name, c.badge_image_url, cu.streak_length FROM users as u LEFT JOIN campaign_user as cu ON cu.userId = u.id LEFT JOIN campaigns as c ON cu.campaignId = c.id  WHERE u.id = $1 OR public_id = $2",
-		user.Id, userLookup.PublicId,
+		"SELECT c.name, c.badge_image_url, cu.streak_length FROM users as u LEFT JOIN campaign_user as cu ON cu.userId = u.id LEFT JOIN campaigns as c ON cu.campaignId = c.id  WHERE u.id = $1",
+		user.Id,
 	)
 
 	if err != nil {

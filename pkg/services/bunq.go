@@ -214,10 +214,6 @@ func BunqProcessNotification(pushInfo string, db *sql.DB) (string, error) {
 		return "", err
 	}
 
-	println(pushInfo)
-	println(counterparty)
-	println(userId)
-
 	campaigns, err := GetCampaigns(db)
 	if err != nil {
 		return "", err
