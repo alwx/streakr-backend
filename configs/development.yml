@@ -18,3 +18,7 @@ web:
   auth:
     minutes_timeout: 1440
     hours_max_refresh: 168
+
+bunq:
+  api: https://api.bunq.com
+  token: 91bd5b4df1bf45dcf1a49fbcb22508c0cd385d34f7953b1d7f254eeb439dae56

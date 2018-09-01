@@ -55,9 +55,9 @@ type Login struct {
 func (login *Login) TryToLogin(db *sql.DB) (User, error) {
 	var user User
 	err := db.QueryRow(
-		"SELECT username, email, password FROM users WHERE email = $1",
+		"SELECT email, password FROM users WHERE email = $1",
 		login.Email,
-	).Scan(&user.Username, &user.Email, &user.HashedPassword)
+	).Scan(&user.Email, &user.HashedPassword)
 
 	u := &utils.Hash{}
 	err = u.Compare(user.HashedPassword, login.Password)
