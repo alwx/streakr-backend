@@ -19,8 +19,12 @@ type NewUser struct {
 type User struct {
 	Id             string `json:"id"`
 	Email          string `json:"email,omitempty"`
-	APIKey         string `json:"api_key"`
+	APIKey         string `json:"api_key,omitempty"`
 	HashedPassword string `json:"hashed_password,omitempty"`
+	PublicKey      string `json:"public_key,omitempty"`
+	PrivateKey     string `json:"private_key,omitempty"`
+	Token          string `json:"user_token,omitempty"`
+	DisplayName    string `json:"display_name,omitempty"`
 }
 
 type RegistrationData struct {
@@ -63,9 +67,9 @@ func (userLookup *UserLookup) GetByEmail(db *sql.DB) (User, error) {
 	var user User
 
 	err := db.QueryRow(
-		"SELECT id, email, api_key FROM users WHERE email = $1",
+		"SELECT id, email, api_key, public_key, private_key, user_token, display_name FROM users WHERE email = $1",
 		userLookup.Email,
-	).Scan(&user.Id, &user.Email, &user.APIKey)
+	).Scan(&user.Id, &user.Email, &user.APIKey, &user.PublicKey, &user.PrivateKey, &user.Token, &user.DisplayName)
 
 	if err != nil {
 		return User{}, err

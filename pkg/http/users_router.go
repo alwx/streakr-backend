@@ -142,6 +142,21 @@ func UserRouter(data Data) {
 
 				c.JSON(http.StatusOK, gin.H{"users": users})
 			})
+
+			secureArea.GET("me", func(c *gin.Context) {
+				user, err := services.ExtractJWTUser(c, data.Database)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+
+				user.Token = ""
+				user.PublicKey = ""
+				user.PrivateKey = ""
+				user.APIKey = ""
+
+				c.JSON(http.StatusOK, gin.H{"user": user})
+			})
 		}
 	}
 }
