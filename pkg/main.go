@@ -10,6 +10,5 @@ func checkErr(err error) {
 
 func Init() {
 	db := DbConnect()
-	redis := InitRedis()
-	http.InitHttp(db, redis)
+	http.InitHttp(db)
 }

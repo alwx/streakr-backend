@@ -14,15 +14,14 @@ import (
 )
 
 type Data struct {
-	Database       *sql.DB
-	Redis          *redis.Client
+	Database *sql.DB
 	AuthMiddleware *jwt.GinJWTMiddleware
 	Router         *gin.Engine
 	SecureArea     *gin.RouterGroup
 }
 
-func InitHttp(db *sql.DB, redis *redis.Client) {
-	authMiddleware, err := services.GetAuthMiddleware(db, redis)
+func InitHttp(db *sql.DB) {
+	authMiddleware, err := services.GetAuthMiddleware(db)
 	if err != nil {
 		panic(err)
 	}
@@ -38,8 +37,7 @@ func InitHttp(db *sql.DB, redis *redis.Client) {
 	}))
 
 	data := Data{
-		Database:       db,
-		Redis:          redis,
+		Database: db,
 		AuthMiddleware: authMiddleware,
 		Router:         router,
 	}

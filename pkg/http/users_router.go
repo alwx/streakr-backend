@@ -4,6 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"streakr-backend/pkg/services"
+	"streakr-backend/pkg/utils"
+	"errors"
+	"encoding/json"
 )
 
 func UserRouter(data Data) {
@@ -60,11 +63,57 @@ func UserRouter(data Data) {
 		users.POST("", func(c *gin.Context) {
 			var registrationData services.RegistrationData
 			if err := c.ShouldBindJSON(&registrationData); err == nil {
+				privateKey, publicKey, err := utils.GenKeys()
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+
+				registrationData.User.PrivateKey = string(privateKey)
+				registrationData.User.PublicKey = string(publicKey)
+
+				token, err := services.BunqInstallation(registrationData.User)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+				if token == "" {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": errors.New("POST /v1/installation failed")})
+					return
+				}
+
+				registrationData.User.Token = token
+
+				deviceServerId, err := services.BunqDeviceServer(registrationData.User)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+				if deviceServerId == 0 {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": errors.New("POST /v1/device-server failed")})
+					return
+				}
+
+				session, err := services.BunqSessionServer(registrationData.User)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+				if session.DisplayName == "" {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": errors.New("POST /v1/session-server failed")})
+					return
+				}
+
+				registrationData.User.DisplayName = session.DisplayName
+				registrationData.User.UserPersonId = session.UserPersonId
+				registrationData.User.Token = session.Token
+
 				userId, err := registrationData.User.Insert(data.Database)
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 					return
 				}
+
 				c.JSON(http.StatusCreated, gin.H{"user_id": userId})
 			} else {
 				c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -95,6 +144,40 @@ func UserRouter(data Data) {
 				}
 
 				c.JSON(http.StatusOK, gin.H{"users": users})
+			})
+
+			secureArea.GET("me", func(c *gin.Context) {
+				user, err := services.ExtractJWTUser(c, data.Database)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+
+				_, bunqUser, err := services.BunqGetUser(user)
+
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+
+				user.Token = ""
+				user.PublicKey = ""
+				user.PrivateKey = ""
+				user.APIKey = ""
+
+				var raw map[string]interface{}
+				json.Unmarshal([]byte(bunqUser), &raw)
+
+				c.JSON(http.StatusOK, gin.H{"user": user, "bunq_user": raw})
+			})
+
+			secureArea.POST("notification-filters", func(c *gin.Context) {
+				user, err := services.ExtractJWTUser(c, data.Database)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+				c.JSON(http.StatusOK, gin.H{"user": user, "bunq_user": "1"})
 			})
 		}
 	}

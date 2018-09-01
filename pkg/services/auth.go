@@ -6,19 +6,14 @@ import (
 	"time"
 	"github.com/gin-gonic/gin"
 	"github.com/appleboy/gin-jwt"
-	"github.com/go-redis/redis"
 	"streakr-backend/pkg/utils"
 )
 
-func GetAuthMiddleware(db *sql.DB, redis *redis.Client) (*jwt.GinJWTMiddleware, error) {
-	companyName, err := redis.Get("config.company_name").Result()
-	if err != nil {
-		companyName = ""
-	}
+func GetAuthMiddleware(db *sql.DB) (*jwt.GinJWTMiddleware, error) {
 
 	middleware := &jwt.GinJWTMiddleware{
-		Realm:         companyName,
-		Key:           []byte(companyName), //TODO(alwx): should be fixed
+		Realm:         "Streakr",
+		Key:           []byte("Streakr"),
 		Timeout:       time.Minute * time.Duration(viper.GetInt("web.auth.minutes_timeout")),
 		MaxRefresh:    time.Hour * time.Duration(viper.GetInt("web.auth.hours_max_refresh")),
 		TokenLookup:   "header:Authorization",
@@ -59,9 +54,9 @@ type Login struct {
 func (login *Login) TryToLogin(db *sql.DB) (User, error) {
 	var user User
 	err := db.QueryRow(
-		"SELECT username, email, password FROM users WHERE email = $1",
+		"SELECT email, password FROM users WHERE email = $1",
 		login.Email,
-	).Scan(&user.Username, &user.Email, &user.HashedPassword)
+	).Scan(&user.Email, &user.HashedPassword)
 
 	u := &utils.Hash{}
 	err = u.Compare(user.HashedPassword, login.Password)

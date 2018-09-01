@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN user_person_id INTEGER DEFAULT 0;
