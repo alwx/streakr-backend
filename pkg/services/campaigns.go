@@ -29,6 +29,7 @@ type NewCampaignData struct {
 
 func (campaign *NewCampaign) Insert(db *sql.DB) (string, error) {
 	var lastInsertId string
+
 	var err = db.QueryRow(
 		"INSERT INTO campaigns(id, name, description, badge_image_url, min_price, streak) VALUES($1, $2, $3, $4, $5, $6) RETURNING id;",
 		uuid.New().String(),
@@ -76,6 +77,33 @@ func GetCampaigns(db *sql.DB) ([]Campaign, error) {
 			campaigns = append(campaigns, campaign)
 		}
 	}
-
 	return campaigns, nil
+}
+
+func AddOrUpdateUserToCampaign(db *sql.DB, campaignId string, userId string) (int, error) {
+	var streakLength int
+	var fetchedMapping string
+
+	err := db.QueryRow(
+		"SELECT campaignId FROM campaign_user WHERE campaignId = $1 AND userId = $2",
+		campaignId,
+		userId,
+	).Scan(&fetchedMapping)
+
+	if err == sql.ErrNoRows {
+		//mapping is not created, so we should insert new value
+		err = db.QueryRow("INSERT INTO campaign_user(campaignId, userId, streak_length) VALUES ($1, $2, $3) RETURNING streak_length", campaignId, userId, 0).Scan(&streakLength)
+		if err != nil {
+			return streakLength, err
+		}
+
+		return streakLength, nil
+	}
+
+	err = db.QueryRow("UPDATE campaign_user SET streak_length = streak_length + 1 WHERE campaignId = $1 AND userId = $2 RETURNING streak_length", campaignId, userId).Scan(&streakLength)
+	if err != nil {
+		return streakLength, err
+	}
+
+	return streakLength, nil
 }

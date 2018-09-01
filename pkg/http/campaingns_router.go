@@ -44,5 +44,19 @@ func CampaignRouter(data Data) {
 
 			c.JSON(http.StatusOK, gin.H{"campaigns": campaigns})
 		})
+
+		// campaigns.POST("/:campaignId/users/:userId", func(c *gin.Context) {
+		// 	campaignId := c.Param("campaignId")
+		// 	userId := c.Param("userId")
+
+		// 	streakLength, err := services.AddOrUpdateUserToCampaign(data.Database, campaignId, userId)
+
+		// 	if err != nil {
+		// 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		// 		return
+		// 	}
+
+		// 	c.JSON(http.StatusOK, gin.H{"status": streakLength})
+		// })
 	}
 }
