@@ -128,8 +128,6 @@ func BunqSessionServer(user *NewUser) (SessionServer, error) {
 
 	userPerson := gjson.Get(string(body), "Response.2.UserPerson")
 
-	println(string(body))
-
 	return SessionServer{
 		UserPersonId: userPerson.Get("id").Int(),
 		PublicId: userPerson.Get("public_uuid").String(),
@@ -196,12 +194,10 @@ func BunqSetNotificationFilters(user User) (string, error) {
 	if err != nil {
 		return "string", err
 	}
-	body, err := ioutil.ReadAll(response.Body)
+	_, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "string", err
 	}
-
-	println(string(body))
 
 	return "ok", nil
 }
@@ -218,15 +214,13 @@ func BunqProcessNotification(pushInfo string, db *sql.DB) (string, error) {
 		return "", err
 	}
 
-	println(user.PublicId)
-
 	campaigns, err := GetCampaigns(db)
 	if err != nil {
 		return "", err
 	}
 	for _, campaign := range campaigns {
 		if strings.Contains(counterparty, campaign.Name) {
-			// insert
+			AddOrUpdateUserToCampaign(db, campaign.Id, user.Id)
 		}
 	}
 

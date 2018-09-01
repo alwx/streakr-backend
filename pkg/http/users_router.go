@@ -196,7 +196,7 @@ func UserRouter(data Data) {
 
 			services.BunqProcessNotification(pushInfo, data.Database)
 
-			c.JSON(http.StatusOK, gin.H{"result": "kek"})
+			c.JSON(http.StatusOK, gin.H{"result": "Processed!"})
 		})
 	}
 }
