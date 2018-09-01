@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"net/http"
 )
 
 type Data struct {
@@ -40,6 +41,13 @@ func InitHttp(db *sql.DB) {
 		AuthMiddleware: authMiddleware,
 		Router:         router,
 	}
+
+
+
+	data.Router.POST("push", func(c *gin.Context) {
+		fmt.Printf("%s", c.Request.Body)
+		c.JSON(http.StatusOK, gin.H{"result": "kek"})
+	})
 
 	UserRouter(data)
 	CampaignRouter(data)
