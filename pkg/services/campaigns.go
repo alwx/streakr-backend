@@ -7,20 +7,20 @@ import (
 )
 
 type NewCampaign struct {
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	PrizeDescription string `json:"prize_description"`
-	MinPrice         int    `json:"min_price"`
-	Amount           int    `json:"amount"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	BadgeImageUrl string `json:"badge_image_url"`
+	MinPrice      int    `json:"min_price"`
+	Streak        int    `json:"streak"`
 }
 
 type Campaign struct {
-	Id               string `json:"id"`
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	PrizeDescription string `json:"prize_description,omitempty"`
-	MinPrice         int    `json:"min_price,omitempty"`
-	Amount           int    `json:"amount,omitempty"`
+	Id            string `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	BadgeImageUrl string `json:"badge_image_url,omitempty"`
+	MinPrice      int    `json:"min_price,omitempty"`
+	Streak        int    `json:"streak,omitempty"`
 }
 
 type NewCampaignData struct {
@@ -30,13 +30,13 @@ type NewCampaignData struct {
 func (campaign *NewCampaign) Insert(db *sql.DB) (string, error) {
 	var lastInsertId string
 	var err = db.QueryRow(
-		"INSERT INTO campaigns(id, name, description, prize_description, min_price, amount) VALUES($1, $2, $3, $4, $5, $6) RETURNING id;",
+		"INSERT INTO campaigns(id, name, description, badge_image_url, min_price, streak) VALUES($1, $2, $3, $4, $5, $6) RETURNING id;",
 		uuid.New().String(),
 		campaign.Name,
 		campaign.Description,
-		campaign.PrizeDescription,
+		campaign.BadgeImageUrl,
 		campaign.MinPrice,
-		campaign.Amount,
+		campaign.Streak,
 	).Scan(&lastInsertId)
 
 	if err != nil {
@@ -50,9 +50,9 @@ func GetCampaignById(db *sql.DB, campaignUuid string) (Campaign, error) {
 	var campaign Campaign
 
 	err := db.QueryRow(
-		"SELECT id, name, description, prize_description, min_price, amount FROM campaigns WHERE Id = $1",
+		"SELECT id, name, description, badge_image_url, min_price, streak FROM campaigns WHERE Id = $1",
 		campaignUuid,
-	).Scan(&campaign.Id, &campaign.Name, &campaign.Description, &campaign.PrizeDescription, &campaign.MinPrice, &campaign.Amount)
+	).Scan(&campaign.Id, &campaign.Name, &campaign.Description, &campaign.BadgeImageUrl, &campaign.MinPrice, &campaign.Streak)
 
 	if err != nil {
 		return Campaign{}, err
