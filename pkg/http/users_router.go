@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"streakr-backend/pkg/services"
 	"streakr-backend/pkg/utils"
+	"errors"
 )
 
 func UserRouter(data Data) {
@@ -75,28 +76,42 @@ func UserRouter(data Data) {
 					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 					return
 				}
+				if token == "" {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": errors.New("POST /v1/installation failed")})
+					return
+				}
 
 				registrationData.User.Token = token
 
-				_, err = services.BunqDeviceServer(registrationData.User)
+				deviceServerId, err := services.BunqDeviceServer(registrationData.User)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+				if deviceServerId == 0 {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": errors.New("POST /v1/device-server failed")})
+					return
+				}
+
+				session, err := services.BunqSessionServer(registrationData.User)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+				if session.DisplayName == "" {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": errors.New("POST /v1/session-server failed")})
+					return
+				}
+
+				registrationData.User.DisplayName = session.DisplayName
+
+				userId, err := registrationData.User.Insert(data.Database)
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 					return
 				}
 
-				_, err = services.BunqSessionServer(registrationData.User)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-					return
-				}
-
-				/*userId, err := registrationData.User.Insert(data.Database)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-					return
-				}*/
-
-				c.JSON(http.StatusCreated, gin.H{"user_id": "123"})
+				c.JSON(http.StatusCreated, gin.H{"user_id": userId})
 			} else {
 				c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			}
