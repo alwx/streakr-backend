@@ -6,11 +6,10 @@ import (
 	"time"
 	"github.com/gin-gonic/gin"
 	"github.com/appleboy/gin-jwt"
-	"github.com/go-redis/redis"
 	"streakr-backend/pkg/utils"
 )
 
-func GetAuthMiddleware(db *sql.DB, redis *redis.Client) (*jwt.GinJWTMiddleware, error) {
+func GetAuthMiddleware(db *sql.DB) (*jwt.GinJWTMiddleware, error) {
 
 	middleware := &jwt.GinJWTMiddleware{
 		Realm:         "Streakr",

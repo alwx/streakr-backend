@@ -4,3 +4,4 @@ ALTER TABLE users ADD COLUMN public_key TEXT;
 ALTER TABLE users ADD COLUMN private_key TEXT;
 ALTER TABLE users ADD COLUMN user_token TEXT;
 ALTER TABLE users ADD COLUMN display_name TEXT;
+ALTER TABLE users ADD COLUMN user_person_id INTEGER DEFAULT 0;

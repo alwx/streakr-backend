@@ -52,8 +52,6 @@ func BunqInstallation(user *NewUser) (string, error) {
 		return "", err
 	}
 
-	fmt.Println(string(body))
-
 	return gjson.Get(string(body), "Response.1.Token.token").String(), nil
 }
 
@@ -89,9 +87,10 @@ func BunqDeviceServer(user *NewUser) (int64, error) {
 	return gjson.Get(string(body), "Response.0.Id.id").Int(), nil
 }
 
-
 type SessionServer struct {
-	DisplayName string
+	UserPersonId int64
+	DisplayName  string
+	Token string
 }
 
 func BunqSessionServer(user *NewUser) (SessionServer, error) {
@@ -124,7 +123,43 @@ func BunqSessionServer(user *NewUser) (SessionServer, error) {
 	}
 
 	userPerson := gjson.Get(string(body), "Response.2.UserPerson")
+
 	return SessionServer{
+		UserPersonId: userPerson.Get("id").Int(),
 		DisplayName: userPerson.Get("display_name").String(),
+		Token: gjson.Get(string(body), "Response.1.Token.token").String(),
 	}, nil
+}
+
+func BunqGetUser(user User) (User, string, error) {
+	endpoint := fmt.Sprintf("/v1/user-person/%d", user.UserPersonId)
+	url := viper.GetString("bunq.api") + endpoint
+
+	json := ""
+
+	headers := utils.GetBasicHeaders(user.Token)
+	signedSignature, err := utils.GetSignature("GET " + endpoint, headers, json, user.PrivateKey)
+	if err != nil {
+		return user, "", err
+	}
+
+	req, err := http.NewRequest("GET", url, bytes.NewBuffer([]byte(json)))
+	if err != nil {
+		return user, "", err
+	}
+	for _, element := range headers {
+		req.Header.Set(element.Name, element.Value)
+	}
+	req.Header.Set("X-Bunq-Client-Signature", signedSignature)
+
+	response, err := execute(req)
+	if err != nil {
+		return user, "", err
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return user, "", err
+	}
+
+	return user, gjson.Get(string(body), "Response.0.UserPerson").String(), nil
 }

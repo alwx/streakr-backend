@@ -6,6 +6,7 @@ import (
 	"streakr-backend/pkg/services"
 	"streakr-backend/pkg/utils"
 	"errors"
+	"encoding/json"
 )
 
 func UserRouter(data Data) {
@@ -104,6 +105,8 @@ func UserRouter(data Data) {
 				}
 
 				registrationData.User.DisplayName = session.DisplayName
+				registrationData.User.UserPersonId = session.UserPersonId
+				registrationData.User.Token = session.Token
 
 				userId, err := registrationData.User.Insert(data.Database)
 				if err != nil {
@@ -150,12 +153,31 @@ func UserRouter(data Data) {
 					return
 				}
 
+				_, bunqUser, err := services.BunqGetUser(user)
+
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+
 				user.Token = ""
 				user.PublicKey = ""
 				user.PrivateKey = ""
 				user.APIKey = ""
 
-				c.JSON(http.StatusOK, gin.H{"user": user})
+				var raw map[string]interface{}
+				json.Unmarshal([]byte(bunqUser), &raw)
+
+				c.JSON(http.StatusOK, gin.H{"user": user, "bunq_user": raw})
+			})
+
+			secureArea.POST("notification-filters", func(c *gin.Context) {
+				user, err := services.ExtractJWTUser(c, data.Database)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
+				c.JSON(http.StatusOK, gin.H{"user": user, "bunq_user": "1"})
 			})
 		}
 	}
