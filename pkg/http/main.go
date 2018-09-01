@@ -9,7 +9,6 @@ import (
 	"github.com/appleboy/gin-jwt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
 	"github.com/spf13/viper"
 )
 
