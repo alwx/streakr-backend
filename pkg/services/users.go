@@ -13,6 +13,7 @@ type NewUser struct {
 	Password     string `json:"password" binding:"required"`
 	PublicKey    string
 	PrivateKey   string
+	PublicId     string
 	Token        string
 	DisplayName  string
 	UserPersonId int64
@@ -28,6 +29,7 @@ type User struct {
 	Token          string `json:"user_token,omitempty"`
 	DisplayName    string `json:"display_name,omitempty"`
 	UserPersonId   int    `json:"user_person_id,omitempty"`
+	PublicId       string `json:"public_id,omitempty"`
 
 	Campaigns []CampaignInfo `json:"campaigns,omitempty"`
 }
@@ -42,7 +44,8 @@ type RegistrationData struct {
 }
 
 type UserLookup struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
+	PublicId string `json:"public_id"`
 }
 
 func (user *NewUser) Insert(db *sql.DB) (string, error) {
@@ -55,7 +58,7 @@ func (user *NewUser) Insert(db *sql.DB) (string, error) {
 
 	var lastInsertId string
 	err = db.QueryRow(
-		"INSERT INTO users(id, email, api_key, public_key, private_key, user_token, password, display_name, user_person_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;",
+		"INSERT INTO users(id, email, api_key, public_key, private_key, user_token, password, display_name, user_person_id, public_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;",
 		uuid.New().String(),
 		user.Email,
 		user.APIKey,
@@ -65,6 +68,7 @@ func (user *NewUser) Insert(db *sql.DB) (string, error) {
 		hash,
 		user.DisplayName,
 		user.UserPersonId,
+		user.PublicId,
 	).Scan(&lastInsertId)
 
 	if err != nil {
@@ -86,17 +90,17 @@ func (userLookup *UserLookup) GetByEmail(db *sql.DB) (User, error) {
 	var user User
 
 	err := db.QueryRow(
-		"SELECT id, email, api_key, public_key, private_key, user_token, display_name, user_person_id FROM users WHERE email = $1",
-		userLookup.Email,
-	).Scan(&user.Id, &user.Email, &user.APIKey, &user.PublicKey, &user.PrivateKey, &user.Token, &user.DisplayName, &user.UserPersonId)
+		"SELECT id, email, api_key, public_key, private_key, user_token, display_name, user_person_id, public_id FROM users WHERE email = $1 OR public_id = $2",
+		userLookup.Email, userLookup.PublicId,
+	).Scan(&user.Id, &user.Email, &user.APIKey, &user.PublicKey, &user.PrivateKey, &user.Token, &user.DisplayName, &user.UserPersonId, &user.PublicId)
 
 	if err != nil {
 		return User{}, err
 	}
 
 	rows, err := db.Query(
-		"SELECT cu.campaignId, cu.streak_length FROM users as u JOIN campaign_user as cu ON cu.userId = u.id WHERE email = $1",
-		userLookup.Email,
+		"SELECT cu.campaignId, cu.streak_length FROM users as u JOIN campaign_user as cu ON cu.userId = u.id WHERE email = $1 OR public_id = $2",
+		userLookup.Email, userLookup.PublicId,
 	)
 
 	if err != nil {

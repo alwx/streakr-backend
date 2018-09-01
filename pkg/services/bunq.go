@@ -9,6 +9,9 @@ import (
 	"github.com/tidwall/gjson"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"database/sql"
+	"strings"
 )
 
 func execute(req *http.Request) (*http.Response, error) {
@@ -89,8 +92,9 @@ func BunqDeviceServer(user *NewUser) (int64, error) {
 
 type SessionServer struct {
 	UserPersonId int64
+	PublicId     string
 	DisplayName  string
-	Token string
+	Token        string
 }
 
 func BunqSessionServer(user *NewUser) (SessionServer, error) {
@@ -124,8 +128,11 @@ func BunqSessionServer(user *NewUser) (SessionServer, error) {
 
 	userPerson := gjson.Get(string(body), "Response.2.UserPerson")
 
+	println(string(body))
+
 	return SessionServer{
 		UserPersonId: userPerson.Get("id").Int(),
+		PublicId: userPerson.Get("public_uuid").String(),
 		DisplayName: userPerson.Get("display_name").String(),
 		Token: gjson.Get(string(body), "Response.1.Token.token").String(),
 	}, nil
@@ -164,7 +171,7 @@ func BunqGetUser(user User) (User, string, error) {
 	return user, gjson.Get(string(body), "Response.0.UserPerson").String(), nil
 }
 
-func BunqSetNotificationFilters(user User, bunqUser string) (string, error) {
+func BunqSetNotificationFilters(user User) (string, error) {
 	endpoint := fmt.Sprintf("/v1/user-person/%d", user.UserPersonId)
 	url := viper.GetString("bunq.api") + endpoint
 
@@ -197,4 +204,31 @@ func BunqSetNotificationFilters(user User, bunqUser string) (string, error) {
 	println(string(body))
 
 	return "ok", nil
+}
+
+func BunqProcessNotification(pushInfo string, db *sql.DB) (string, error) {
+	counterparty := gjson.Get(pushInfo, "NotificationUrl.object.Payment.counterparty_alias.display_name").String()
+	if counterparty == "" {
+		return "", errors.New("Empty counterparty")
+	}
+
+	userId := gjson.Get(pushInfo, "NotificationUrl.object.Payment.alias.label_user.uuid").String()
+	user, err := (&UserLookup{PublicId: userId}).GetByEmail(db)
+	if err != nil {
+		return "", err
+	}
+
+	println(user.PublicId)
+
+	campaigns, err := GetCampaigns(db)
+	if err != nil {
+		return "", err
+	}
+	for _, campaign := range campaigns {
+		if strings.Contains(counterparty, campaign.Name) {
+			// insert
+		}
+	}
+
+	return "", nil
 }

@@ -108,6 +108,7 @@ func UserRouter(data Data) {
 
 				registrationData.User.DisplayName = session.DisplayName
 				registrationData.User.UserPersonId = session.UserPersonId
+				registrationData.User.PublicId = session.PublicId
 				registrationData.User.Token = session.Token
 
 				userId, err := registrationData.User.Insert(data.Database)
@@ -179,10 +180,11 @@ func UserRouter(data Data) {
 					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 					return
 				}
-
-				_, bunqUser, err := services.BunqGetUser(user)
-
-				res, err := services.BunqSetNotificationFilters(user, bunqUser)
+				res, err := services.BunqSetNotificationFilters(user)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+					return
+				}
 
 				c.JSON(http.StatusOK, gin.H{"result": res})
 			})
@@ -190,7 +192,10 @@ func UserRouter(data Data) {
 
 		users.POST("push", func(c *gin.Context) {
 			x, _ := ioutil.ReadAll(c.Request.Body)
-			fmt.Printf("%s", string(x))
+			pushInfo := fmt.Sprintf("%s", string(x))
+
+			services.BunqProcessNotification(pushInfo, data.Database)
+
 			c.JSON(http.StatusOK, gin.H{"result": "kek"})
 		})
 	}
