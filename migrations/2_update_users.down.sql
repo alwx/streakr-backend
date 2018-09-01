@@ -4,4 +4,3 @@ ALTER TABLE users DROP COLUMN public_key;
 ALTER TABLE users DROP COLUMN private_key;
 ALTER TABLE users DROP COLUMN user_token;
 ALTER TABLE users DROP COLUMN display_name;
-ALTER TABLE users DROP COLUMN user_person_id;
