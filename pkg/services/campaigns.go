@@ -64,14 +64,14 @@ func GetCampaignById(db *sql.DB, campaignUuid string) (Campaign, error) {
 func GetCampaigns(db *sql.DB) ([]Campaign, error) {
 	var campaigns []Campaign
 
-	rows, err := db.Query("SELECT id, name, description FROM campaigns")
+	rows, err := db.Query("SELECT id, name, description, badge_image_url, min_price, streak FROM campaigns")
 	if err != nil {
 		return []Campaign{}, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var campaign Campaign
-		err = rows.Scan(&campaign.Id, &campaign.Name, &campaign.Description)
+		err = rows.Scan(&campaign.Id, &campaign.Name, &campaign.Description, &campaign.BadgeImageUrl, &campaign.MinPrice, &campaign.Streak)
 		if err == nil {
 			campaigns = append(campaigns, campaign)
 		}
