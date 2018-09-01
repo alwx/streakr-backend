@@ -163,3 +163,38 @@ func BunqGetUser(user User) (User, string, error) {
 
 	return user, gjson.Get(string(body), "Response.0.UserPerson").String(), nil
 }
+
+func BunqSetNotificationFilters(user User, bunqUser string) (string, error) {
+	endpoint := fmt.Sprintf("/v1/user-person/%d", user.UserPersonId)
+	url := viper.GetString("bunq.api") + endpoint
+
+	json := "{\"notification_filters\": [{\"notification_delivery_method\": \"URL\", \"notification_target\": \"https://streakr.alwx.me/push\", \"category\": \"MUTATION\"}]}"
+
+	headers := utils.GetBasicHeaders(user.Token)
+	signedSignature, err := utils.GetSignature("PUT " + endpoint, headers, json, user.PrivateKey)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer([]byte(json)))
+	if err != nil {
+		return "string", err
+	}
+	for _, element := range headers {
+		req.Header.Set(element.Name, element.Value)
+	}
+	req.Header.Set("X-Bunq-Client-Signature", signedSignature)
+
+	response, err := execute(req)
+	if err != nil {
+		return "string", err
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "string", err
+	}
+
+	println(string(body))
+
+	return "ok", nil
+}
